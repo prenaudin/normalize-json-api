@@ -1,0 +1,19 @@
+---
+root: true
+
+parser: babel-eslint
+
+extends: eslint-config-airbnb
+
+env:
+  browser: true
+  node: false
+  mocha: true
+
+globals:
+  require: true
+
+rules:
+  indent: [1, 2, { SwitchCase: 1, VariableDeclarator: 2 }]
+  jsx-quotes: 1
+  new-cap: 0

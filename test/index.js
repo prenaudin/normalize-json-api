@@ -1,43 +1,41 @@
-'use strict';
+const expect = require('chai').expect;
+const normalizeJSONAPI = require('../src');
+const normalize = normalizeJSONAPI.normalize;
 
-var should = require('chai').should(),
-    normalizeJSONAPI = require('../src'),
-    normalize = normalizeJSONAPI.normalize;
-
-describe('normalizr', function () {
-  it('fails normalizing something other than array or object', function () {
-    (function () {
+describe('normalizr', () => {
+  it('fails normalizing something other than array or object', () => {
+    expect(() => {
       normalize(42, {});
-    }).should.throw();
+    }).to.throw();
 
-    (function () {
+    expect(() => {
       normalize(null, {});
-    }).should.throw();
+    }).to.throw();
 
-    (function () {
+    expect(() => {
       normalize(undefined, {});
-    }).should.throw();
+    }).to.throw();
 
-    (function () {
+    expect(() => {
       normalize('42', {});
-    }).should.throw();
+    }).to.throw();
   });
 
-  it('can normalize single entity', function () {
-    var response = {
+  it('can normalize single entity', () => {
+    const response = {
       data: {
         id: 1,
-        type: "articles",
+        type: 'articles',
         attributes: {
-          title: "Shoes",
+          title: 'Shoes',
           'is-favorite': false,
-        }
-      }
+        },
+      },
     };
 
     Object.freeze(response);
 
-    normalize(response).should.eql({
+    expect(normalize(response)).to.eql({
       results: {
         articles: [1],
       },
@@ -48,46 +46,46 @@ describe('normalizr', function () {
             title: 'Shoes',
             isFavorite: false,
             type: 'articles',
-          }
+          },
         },
-      }
+      },
     });
   });
 
-  it('can normalize single entity with included entities', function () {
-    var response = {
+  it('can normalize single entity with included entities', () => {
+    const response = {
       data: {
         id: 1,
-        type: "articles",
+        type: 'articles',
         attributes: {
-          title: "Shoes",
+          title: 'Shoes',
           'is-favorite': false,
         },
         relationships: {
           author: {
             data: {
-              type: "users",
+              type: 'users',
               id: 9,
-            }
-          }
-        }
+            },
+          },
+        },
       },
       included: [
         {
-          type: "users",
+          type: 'users',
           id: 9,
           attributes: {
-            "first-name": "Marie",
-            "last-name": "Brizard",
-            "twitter": "mb"
+            'first-name': 'Marie',
+            'last-name': 'Brizard',
+            twitter: 'mb',
           },
-        }
-      ]
+        },
+      ],
     };
 
     Object.freeze(response);
 
-    normalize(response).should.eql({
+    expect(normalize(response)).to.eql({
       results: {
         articles: [1],
         users: [9],
@@ -100,7 +98,7 @@ describe('normalizr', function () {
             title: 'Shoes',
             isFavorite: false,
             author: 9,
-          }
+          },
         },
         users: {
           9: {
@@ -109,9 +107,9 @@ describe('normalizr', function () {
             firstName: 'Marie',
             lastName: 'Brizard',
             twitter: 'mb',
-          }
-        }
-      }
+          },
+        },
+      },
     });
   });
 });
