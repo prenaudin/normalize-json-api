@@ -1,64 +1,53 @@
-import humps from 'humps';
-const { camelizeKeys } = humps;
-
+import camelize from 'camelize';
 import isObject from 'lodash/isObject';
 import isArray from 'lodash/isArray';
-import keys from 'lodash/keys';
-import clone from 'lodash/clone';
 import reduce from 'lodash/reduce';
 import map from 'lodash/map';
-import pick from 'lodash/pick';
-import extend from 'lodash/extend';
-import flatten from 'lodash/flatten';
+import forEach from 'lodash/forEach';
 import groupBy from 'lodash/groupBy';
 import mapValues from 'lodash/mapValues';
 
 function flattenObject(object) {
-  const relationships = reduce(object.relationships, (result, value, key) => {
-    const formatResult = result;
+  const normalized = {
+    id: object.id,
+    type: object.type,
+  };
+
+  forEach(object.attributes, (value, key) => {
+    normalized[key] = value;
+  });
+
+  forEach(object.relationships, (value, key) => {
     if (isArray(value.data)) {
-      formatResult[key] = map(value.data, (item) => item.id);
-    } else {
-      if (value.data) {
-        formatResult[key] = value.data.id;
-      }
+      normalized[key] = map(value.data, (item) => item.id);
+    } else if (isObject(value.data)) {
+      normalized[key] = value.data.id;
     }
-    return formatResult;
-  }, {});
+  });
 
-  return extend({},
-    pick(object, 'id', 'type'),
-    object.attributes,
-    relationships
-  );
+  return normalized;
 }
 
-function flattenObjects(objectsToFlatten) {
-  let objects = clone(objectsToFlatten);
-  if (!isArray(objects)) { objects = [objects]; }
-  return map(objects, flattenObject);
+function flattenObjects(objects) {
+  return map(isArray(objects) ? objects : [objects], flattenObject);
 }
 
-function flattenResponse(response) {
-  const flattenedObjects = [];
-  flattenedObjects.push(flattenObjects(response.data));
+function flattenResponse({ data, included }) {
+  let entities = []
+    .concat(flattenObjects(data))
+    .concat(flattenObjects(included || []));
 
-  if (response.included) {
-    flattenedObjects.push(flattenObjects(response.included));
-  }
-
-  let entities = flatten(flattenedObjects);
   entities = groupBy(entities, (value) => value.type);
   entities = mapValues(entities, (value) =>
     reduce(value, (result, resultValue) => {
       const formatResult = result;
-      formatResult[resultValue.id] = camelizeKeys(resultValue);
+      formatResult[resultValue.id] = camelize(resultValue);
       return formatResult;
     }, {})
   );
 
   const results = mapValues(entities, (value) =>
-    map(keys(value), (key) => parseInt(key, 10) || key)
+    map(Object.keys(value), (key) => parseInt(key, 10) || key)
   );
   return { results, entities };
 }
