@@ -1,25 +1,25 @@
-import camelize from 'camelize';
 import isObject from 'lodash/isObject';
 import isArray from 'lodash/isArray';
 import reduce from 'lodash/reduce';
-import map from 'lodash/map';
-import forEach from 'lodash/forEach';
 import groupBy from 'lodash/groupBy';
 import mapValues from 'lodash/mapValues';
 
-function flattenObject(object) {
+import camelizeKeys from './camelizeKeys';
+
+function normalizeEntity(entity) {
   const normalized = {
-    id: object.id,
-    type: object.type,
+    id: entity.id,
+    type: entity.type,
   };
 
-  forEach(object.attributes, (value, key) => {
-    normalized[key] = value;
+  Object.keys(entity.attributes || []).forEach((key) => {
+    normalized[key] = entity.attributes[key];
   });
 
-  forEach(object.relationships, (value, key) => {
+  Object.keys(entity.relationships || []).forEach((key) => {
+    const value = entity.relationships[key];
     if (isArray(value.data)) {
-      normalized[key] = map(value.data, (item) => item.id);
+      normalized[key] = value.data.map((item) => item.id);
     } else if (isObject(value.data)) {
       normalized[key] = value.data.id;
     }
@@ -28,33 +28,29 @@ function flattenObject(object) {
   return normalized;
 }
 
-function flattenObjects(objects) {
-  return map(isArray(objects) ? objects : [objects], flattenObject);
-}
-
-function flattenResponse({ data, included }) {
+function normalizeResponse({ data, included }) {
   let entities = []
-    .concat(flattenObjects(data))
-    .concat(flattenObjects(included || []));
+    .concat((isArray(data) ? data : [data]).map(normalizeEntity))
+    .concat((included || []).map(normalizeEntity));
 
   entities = groupBy(entities, (value) => value.type);
   entities = mapValues(entities, (value) =>
     reduce(value, (result, resultValue) => {
       const formatResult = result;
-      formatResult[resultValue.id] = camelize(resultValue);
+      formatResult[resultValue.id] = camelizeKeys(resultValue);
       return formatResult;
     }, {})
   );
 
   const results = mapValues(entities, (value) =>
-    map(Object.keys(value), (key) => parseInt(key, 10) || key)
+    Object.keys(value).map((key) => parseInt(key, 10) || key)
   );
   return { results, entities };
 }
 
 export function normalize(obj) {
   if (!isObject(obj)) {
-    throw new Error('Normalize accepts an object or an array as its input.');
+    throw new Error('Normalize JSON API accepts an object as its input.');
   }
-  return flattenResponse(obj);
+  return normalizeResponse(obj);
 }

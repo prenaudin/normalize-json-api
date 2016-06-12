@@ -4,7 +4,7 @@
   "description": "Normalizes JSON API responses for Redux and Flux applications",
   "main": "src/index.js",
   "scripts": {
-    "test": "mocha --compilers js:babel-register --recursive && npm run lint",
+    "test": "mocha --compilers js:babel-register --recursive",
     "lint": "eslint .",
     "test:watch": "npm run test -- --watch",
     "prebuild": "rimraf dist lib",
@@ -30,7 +30,6 @@
   },
   "homepage": "https://github.com/prenaudin/normalize-json-api#readme",
   "dependencies": {
-    "camelize": "^1.0.0",
     "lodash": "^4.13.1"
   },
   "devDependencies": {

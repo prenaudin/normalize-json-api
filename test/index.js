@@ -2,7 +2,7 @@ const expect = require('chai').expect;
 const normalizeJSONAPI = require('../src');
 const normalize = normalizeJSONAPI.normalize;
 
-describe('normalizr', () => {
+describe('normalize-json-api', () => {
   it('fails normalizing something other than array or object', () => {
     expect(() => {
       normalize(42, {});
