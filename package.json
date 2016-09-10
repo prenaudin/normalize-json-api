@@ -2,7 +2,7 @@
   "name": "normalize-json-api",
   "version": "0.1.0",
   "description": "Normalizes JSON API responses for Redux and Flux applications",
-  "main": "src/index.js",
+  "main": "lib/index.js",
   "scripts": {
     "test": "mocha --compilers js:babel-register --recursive",
     "lint": "eslint .",
